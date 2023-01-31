@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Card from "react-bootstrap/Card";
 import "./register.css";
 import Button from "react-bootstrap/Button";
@@ -6,12 +6,13 @@ import Form from "react-bootstrap/Form";
 import Row from "react-bootstrap/Row";
 import Select from 'react-select';
 import { useEffect } from "react";
-
+import {registerfunc} from "../../services/Apis"
 import { ToastContainer, toast } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css';
-
+import {useNavigate} from "react-router-dom"
+import { addData } from "../../context/ContextProvider";
 export const Register = () => {
-
+ 
   const [inputdata, setInputData] = useState({
     fname: "",
     lname: "",
@@ -25,6 +26,9 @@ export const Register = () => {
   const [image, setImage] = useState("");
 
   const [preview, setPreview] = useState("");
+
+  const navigate = useNavigate();
+  const { setUseradd } = useContext(addData);
 
   useEffect(()=>{
     if(image){
@@ -75,7 +79,41 @@ export const Register = () => {
     } else if (location === "") {
       toast.error("location is Required !")
     } else {
-      toast.success("Registration successfully done");
+
+      const data = new FormData();
+      data.append("fname",fname)
+      data.append("lname",lname)
+      data.append("email",email)
+      data.append("mobile",mobile)
+      data.append("gender",gender)
+      data.append("status",status)
+      data.append("user_profile",image)
+      data.append("location",location)
+
+      const config = {
+        "Content-Type":"multipart/form-data"
+      }
+
+      const response = await registerfunc(data,config);
+      
+      if(response.status === 200){
+        setInputData({
+          ...inputdata,
+          fname:"",
+          lname: "",
+          email: "",
+          mobile: "",
+          gender: "",
+          location: ""
+        });
+        setStatus("");
+        setImage("");
+        setUseradd(response.data)
+        toast.success("Registration successfully done");
+        navigate("/");
+      }else{
+        toast.error("Error!")
+      }
     }
   }
   // status optios

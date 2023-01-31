@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useContext, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
 import Dropdown from "react-bootstrap/Dropdown";
@@ -8,12 +8,14 @@ import { useNavigate } from "react-router-dom";
 import { Tables } from "../../components/table/Tables";
 import {Spiner} from '../../components/spinner/Spinner';
 import { useEffect } from "react";
+import { addData } from "../../context/ContextProvider";
+import Alert from 'react-bootstrap/Alert';
 
 
 export const Home = () => {
 
   const navigate = useNavigate();
-
+  const { useradd,setUseradd } = useContext(addData);
   const [showspin,setShowSpin] = useState(true);
 
   const addUser = () => {
@@ -27,6 +29,10 @@ export const Home = () => {
     },1200)
   },[])
   return (
+    <>
+    {
+     useradd ? <Alert variant="success" onClose={() => setUseradd("")} dismissible>{useradd.fname.toUpperCase()} Succesfully Added</Alert>:""
+    }
     <div className="container">
       <div className="main_div">
         {/* search add btn */}
@@ -47,7 +53,7 @@ export const Home = () => {
           <div className="add_btn">
             <Button variant="primary" onClick={addUser}>
               {" "}
-              <i class="fa-solid fa-plus"></i>&nbsp; Add User
+              <i className="fa-solid fa-plus"></i>&nbsp; Add User
             </Button>
           </div>
         </div>
@@ -88,7 +94,7 @@ export const Home = () => {
             <h3>Short By Value</h3>
             <Dropdown className="text-center">
               <Dropdown.Toggle className="dropdown_btn" id="dropdown-basic">
-                <i class="fa-solid fa-sort"></i>
+                <i className="fa-solid fa-sort"></i>
               </Dropdown.Toggle>
               <Dropdown.Menu>
                 <Dropdown.Item>New</Dropdown.Item>
@@ -129,5 +135,7 @@ export const Home = () => {
       showspin ? <Spiner/>:<Tables/>
      }
     </div>
+    </>
+    
   );
 };
