@@ -7,7 +7,9 @@ import Badge from "react-bootstrap/Badge";
 
 import "./table.css";
 import { NavLink } from "react-router-dom";
-export const Tables = () => {
+import { BASE_URL } from "../../services/helper";
+
+export const Tables = ({userdata}) => {
   return (
     <>
       <div className="container">
@@ -27,19 +29,21 @@ export const Tables = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td>1</td>
-                    <td>Mukesh Kumar</td>
-                    <td>mkvermashk@gmail.com </td>
-                    <td>Male</td>
+                  {userdata.length > 0 ? userdata.map((item,index)=>{
+                    return(
+                      <tr key={item._id}>
+                    <td>{index +1}</td>
+                    <td>{item.fname + " " + item.lname}</td>
+                    <td>{item.email} </td>
+                    <td>{item.gender==="Female" ?"F":"M"}</td>
                     <td>
                       <Dropdown className="text-centre">
                         <Dropdown.Toggle
                           className="dropdown_btn"
                           id="dropdown-basic"
                         >
-                          <Badge>
-                            Active <i class="fa-solid fa-angle-down"></i>
+                          <Badge bg={item.status === "Active" ? "primary" : "danger"}>
+                            {item.status} <i className="fa-solid fa-angle-down"></i>
                           </Badge>
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
@@ -49,7 +53,7 @@ export const Tables = () => {
                       </Dropdown>
                     </td>
                     <td className="img_parent">
-                      <img src={`/man.png`} alt="img" />
+                      <img src={`${BASE_URL}/uploads/${item.profile}`} alt="img" />
                     </td>
                     <td>
                       <Dropdown>
@@ -58,16 +62,16 @@ export const Tables = () => {
                           className="action"
                           id="dropdown-basic"
                         >
-                          <i class="fa-solid fa-ellipsis-vertical"></i>
+                          <i className="fa-solid fa-ellipsis-vertical"></i>
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
                           <Dropdown.Item>
                             <NavLink
-                              to={`/userprofile/1`}
+                              to={`/userprofile/${item._id}`}
                               className="text-decoration-none"
                             >
                               <i
-                                class="fa-solid fa-eye"
+                                className="fa-solid fa-eye"
                                 style={{ color: "green" }}
                               ></i>{" "}
                               <span>View</span>
@@ -75,11 +79,11 @@ export const Tables = () => {
                           </Dropdown.Item>
                           <Dropdown.Item>
                             <NavLink
-                              to={`/edit/1`}
+                              to={`/edit/${item._id}`}
                               className="text-decoration-none"
                             >
                               <i
-                                class="fa-solid fa-pen-to-square"
+                                className="fa-solid fa-pen-to-square"
                                 style={{ color: "blue" }}
                               ></i>{" "}
                               <span>Edit</span>
@@ -98,6 +102,10 @@ export const Tables = () => {
                       </Dropdown>
                     </td>
                   </tr>
+                    )
+                  }): <div className='no_data text-center'>NO Data Found</div>
+                  }
+                  
                 </tbody>
               </Table>
             </Card>

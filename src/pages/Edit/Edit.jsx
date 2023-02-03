@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState } from 'react'
 import './edit.css'
 import Card from "react-bootstrap/Card";
@@ -9,7 +10,19 @@ import { useEffect } from "react";
 
 import { ToastContainer, toast } from "react-toastify"
 import 'react-toastify/dist/ReactToastify.css';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Spiner } from '../../components/spinner/Spinner';
+import { editfunc, singleUsergetfunc } from '../../services/Apis';
+import { BASE_URL } from '../../services/helper';
+import { useContext } from 'react';
+import { updateData } from '../../context/ContextProvider';
+
+
 export const Edit = () => {
+
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   const [inputdata, setInputData] = useState({
     fname: "",
     lname: "",
@@ -18,18 +31,17 @@ export const Edit = () => {
     gender: "",
     location: ""
   });
-
+  const [showspin, setShowSpin] = useState(true);
   const [status, setStatus] = useState("Active");
+
   const [image, setImage] = useState("");
+  //get data from database
+  const [imgdata,setImgdata] = useState("");
 
   const [preview, setPreview] = useState("");
 
-  useEffect(()=>{
-    if(image){
-      setPreview(URL.createObjectURL(image))
-    }
-  },[image])
-
+  const {setUpdate} = useContext(updateData);
+ 
   const setinputValue =(e)=>{
     
     const {name,value} = e.target;
@@ -47,6 +59,19 @@ export const Edit = () => {
     setImage(e.target.files[0])
   }
 
+  const userProfileGet = async () => {
+    const response = await singleUsergetfunc(id);
+    if(response.status === 200){
+      setInputData(response.data);
+      setStatus(response.data.status);
+      setImgdata(response.data.profile)
+
+    }else{
+      console.log("error");
+    }
+    
+  };
+ 
   //submit userdata
   const submitUserData = async(e) => {
     e.preventDefault();
@@ -73,9 +98,46 @@ export const Edit = () => {
     } else if (location === "") {
       toast.error("location is Required !")
     } else {
-      toast.success("Registration successfully done");
+      const data = new FormData();
+      data.append("fname",fname)
+      data.append("lname",lname)
+      data.append("email",email)
+      data.append("mobile",mobile)
+      data.append("gender",gender)
+      data.append("status",status)
+      data.append("user_profile",image || imgdata)
+      data.append("location",location)
+
+      const config = {
+        "Content-Type":"multipart/form-data"
+      }
+
+      const response = await editfunc(id,data,config);
+
+      if(response.status === 200){
+        setUpdate(response.data)
+        navigate("/")
+      }
+     
+     
     }
   }
+
+  useEffect(()=>{
+    userProfileGet();
+  },[id])
+
+  useEffect(()=>{
+    if(image){
+      setImgdata("")
+      setPreview(URL.createObjectURL(image))
+    }
+    setTimeout(() => {
+      setShowSpin(false);
+    }, 1200);
+  },[image])
+
+  
   // status optios
   const options = [
     { value: 'Active', label: 'Active' },
@@ -83,11 +145,11 @@ export const Edit = () => {
   ];
   return (
     <>
-      <div className="container">
+    {showspin ? <Spiner/> : <div className="container">
         <h2 className="text-center mt-1">Update Your Details</h2>
         <Card className="shadow mt-3 p-3">
           <div className="profile_div text-center">
-            <img src={preview ? preview:"/man.png"} alt="img" />
+            <img src={image ? preview : `${BASE_URL}/uploads/${imgdata}`}alt="img" />
           </div>
           <Form>
             <Row>
@@ -138,6 +200,7 @@ export const Edit = () => {
                     label={`Male`}
                     name="gender"
                     value={"Male"}
+                    checked={inputdata.gender ==="Male" ? true:false}
                     onChange={setinputValue}
                   />
                   <Form.Check
@@ -145,12 +208,13 @@ export const Edit = () => {
                     label={`Female`}
                     name="gender"
                     value={"Female"}
+                    checked={inputdata.gender ==="Female" ? true:false}
                     onChange={setinputValue}
                   />
                 </Form.Group>
                 <Form.Group className="mb-3 col-lg-6" controlId="formBasicEmail">
                   <Form.Label>Select Your Status</Form.Label>
-                  <Select options={options} onChange={setStatusValue} />
+                  <Select options={options} defaultValue={status} onChange={setStatusValue} />
                 </Form.Group>
                 <Form.Group className="mb-3 col-lg-6" controlId="formBasicEmail">
                   <Form.Label>Select Your Profile</Form.Label>
@@ -167,7 +231,8 @@ export const Edit = () => {
           </Form>
         </Card>
         <ToastContainer position="top-center" />
-      </div>
+      </div>}
+     
     </>
   )
 }

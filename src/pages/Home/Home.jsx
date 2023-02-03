@@ -8,22 +8,37 @@ import { useNavigate } from "react-router-dom";
 import { Tables } from "../../components/table/Tables";
 import {Spiner} from '../../components/spinner/Spinner';
 import { useEffect } from "react";
-import { addData } from "../../context/ContextProvider";
+import { addData,updateData } from "../../context/ContextProvider";
 import Alert from 'react-bootstrap/Alert';
+import { usergetfunc } from "../../services/Apis";
 
 
 export const Home = () => {
 
   const navigate = useNavigate();
   const { useradd,setUseradd } = useContext(addData);
+  const {update, setUpdate} = useContext(updateData);
+
   const [showspin,setShowSpin] = useState(true);
+  const [userdata,setUserData] = useState([]);
 
   const addUser = () => {
     navigate("/register");
   };
+  const userGet = async()=>{
+    const response =await usergetfunc();
 
-  useEffect(()=>{
+    if(response.status === 200){
+      setUserData(response.data);
       
+    }else{
+      console.log("error for get user data")
+    }
+
+    
+  }
+  useEffect(()=>{
+      userGet()
     setTimeout(()=>{
          setShowSpin(false)
     },1200)
@@ -32,6 +47,9 @@ export const Home = () => {
     <>
     {
      useradd ? <Alert variant="success" onClose={() => setUseradd("")} dismissible>{useradd.fname.toUpperCase()} Succesfully Added</Alert>:""
+    }
+    {
+      update?<Alert variant="primary" onClose={() => setUpdate("")} dismissible>{useradd.fname.toUpperCase()} Succesfully Updated</Alert>:""
     }
     <div className="container">
       <div className="main_div">
@@ -132,7 +150,8 @@ export const Home = () => {
         </div>
       </div>
      {
-      showspin ? <Spiner/>:<Tables/>
+      showspin ? <Spiner/>:<Tables 
+      userdata={userdata}/>
      }
     </div>
     </>
