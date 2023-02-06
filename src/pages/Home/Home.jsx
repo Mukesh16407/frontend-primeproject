@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useContext, useState } from "react";
 import Form from "react-bootstrap/Form";
 import Button from "react-bootstrap/Button";
@@ -8,9 +9,10 @@ import { useNavigate } from "react-router-dom";
 import { Tables } from "../../components/table/Tables";
 import {Spiner} from '../../components/spinner/Spinner';
 import { useEffect } from "react";
-import { addData,updateData } from "../../context/ContextProvider";
+import { addData,dltdata,updateData } from "../../context/ContextProvider";
 import Alert from 'react-bootstrap/Alert';
-import { usergetfunc } from "../../services/Apis";
+import { deletefun, exporttocsvfunc, usergetfunc } from "../../services/Apis";
+import { toast } from "react-toastify";
 
 
 export const Home = () => {
@@ -18,18 +20,28 @@ export const Home = () => {
   const navigate = useNavigate();
   const { useradd,setUseradd } = useContext(addData);
   const {update, setUpdate} = useContext(updateData);
+  const {deletedata,setDLtdata} = useContext(dltdata)
 
   const [showspin,setShowSpin] = useState(true);
   const [userdata,setUserData] = useState([]);
+  const [search,setSearch] = useState("");
+  const [gender,setGender] = useState("All");
+  const [status,setStatus] = useState("All");
+  const [sort,setSort] = useState("new");
 
+  const [page,setPage] = useState(1);
+  const [pageCount,setPageCount] = useState(0);
+
+  //add user
   const addUser = () => {
     navigate("/register");
   };
   const userGet = async()=>{
-    const response =await usergetfunc();
+    const response =await usergetfunc(search,gender,status,sort,page);
 
     if(response.status === 200){
-      setUserData(response.data);
+      setUserData(response.data.userData);
+      setPageCount(response.data.Pagination.pageCount)
       
     }else{
       console.log("error for get user data")
@@ -37,19 +49,58 @@ export const Home = () => {
 
     
   }
+  const deleteUser =async(id)=>{
+   const response = await deletefun(id);
+
+   if(response.status === 200){
+    userGet();
+    setDLtdata(response.data)
+   }else{
+    toast.error("error")
+   }
+  };
+
+  // export user
+  const exportuser = async()=>{
+    const response = await exporttocsvfunc();
+    if(response.status === 200){
+      window.open(response.data.downloadUrl,"blank")
+    }else{
+      toast.error("error !")
+    }
+  }
+ // pagination
+  // handle prev btn
+  const handlePrevious = ()=>{
+    setPage(()=>{
+      if(page === 1) return page;
+      return page - 1
+    })
+  }
+
+  // handle next btn
+  const handleNext = ()=>{
+    setPage(()=>{
+      if(page === pageCount) return page;
+      return page + 1
+    })
+  }
   useEffect(()=>{
       userGet()
     setTimeout(()=>{
          setShowSpin(false)
     },1200)
-  },[])
+  },[search,gender,status,sort,page])
   return (
     <>
     {
      useradd ? <Alert variant="success" onClose={() => setUseradd("")} dismissible>{useradd.fname.toUpperCase()} Succesfully Added</Alert>:""
     }
     {
-      update?<Alert variant="primary" onClose={() => setUpdate("")} dismissible>{useradd.fname.toUpperCase()} Succesfully Updated</Alert>:""
+      update?<Alert variant="primary" onClose={() => setUpdate("")} dismissible>{update.fname.toUpperCase()} Succesfully Updated</Alert>:""
+    }
+    {
+      deletedata ?<Alert variant="danger" onClose={() => setDLtdata("")} dismissible>{deletedata.fname.toUpperCase()} Succesfully Deleted</Alert>:""
     }
     <div className="container">
       <div className="main_div">
@@ -62,6 +113,7 @@ export const Home = () => {
                 placeholder="Search"
                 className="me-2"
                 aria-label="Search"
+                onChange={(e)=>setSearch(e.target.value)}
               />
               <Button variant="success" className="search_btn">
                 Search
@@ -79,7 +131,7 @@ export const Home = () => {
 
         <div className="filter_div mt-5 d-flex justify-content-between flex-wrap">
           <div className="export_csv">
-            <Button className="export_btn">Export To Csv</Button>
+            <Button className="export_btn"onClick={exportuser}>Export To Csv</Button>
           </div>
           <div className="filter_gender">
             <div className="filter">
@@ -90,6 +142,7 @@ export const Home = () => {
                   label={`All`}
                   name="gender"
                   value={"All"}
+                  onChange={(e)=>setGender(e.target.value)}
                   defaultChecked
                 />
                 <Form.Check
@@ -97,12 +150,14 @@ export const Home = () => {
                   label={`Male`}
                   name="gender"
                   value={"Male"}
+                  onChange={(e)=>setGender(e.target.value)}
                 />
                 <Form.Check
                   type={"radio"}
                   label={`Female`}
                   name="gender"
                   value={"Female"}
+                  onChange={(e)=>setGender(e.target.value)}
                 />
               </div>
             </div>
@@ -115,8 +170,8 @@ export const Home = () => {
                 <i className="fa-solid fa-sort"></i>
               </Dropdown.Toggle>
               <Dropdown.Menu>
-                <Dropdown.Item>New</Dropdown.Item>
-                <Dropdown.Item>Old</Dropdown.Item>
+                <Dropdown.Item onClick={()=>setSort("new")}>New</Dropdown.Item>
+                <Dropdown.Item onClick={()=> setSort("old")}>Old</Dropdown.Item>
               </Dropdown.Menu>
             </Dropdown>
           </div>
@@ -130,6 +185,7 @@ export const Home = () => {
                   label={`All`}
                   name="status"
                   value={"All"}
+                  onChange={(e)=>setStatus(e.target.value)}
                   defaultChecked
                 />
                 <Form.Check
@@ -137,12 +193,14 @@ export const Home = () => {
                   label={`Active`}
                   name="status"
                   value={"Active"}
+                  onChange={(e)=>setStatus(e.target.value)}
                 />
                 <Form.Check
                   type={"radio"}
                   label={`InActive`}
                   name="status"
                   value={"InActive"}
+                  onChange={(e)=>setStatus(e.target.value)}
                 />
               </div>
             </div>
@@ -151,7 +209,14 @@ export const Home = () => {
       </div>
      {
       showspin ? <Spiner/>:<Tables 
-      userdata={userdata}/>
+      userdata={userdata}
+      deleteUser={deleteUser}
+      userGet={userGet}
+      handlePrevious={handlePrevious}
+      handleNext={handleNext}
+      page={page}
+      pageCount={pageCount}
+      setPage={setPage}/>
      }
     </div>
     </>

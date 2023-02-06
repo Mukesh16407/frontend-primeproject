@@ -8,8 +8,22 @@ import Badge from "react-bootstrap/Badge";
 import "./table.css";
 import { NavLink } from "react-router-dom";
 import { BASE_URL } from "../../services/helper";
+import { statuschangefunc } from "../../services/Apis";
+import {ToastContainer, toast } from "react-toastify";
+import { Pagginations } from "../paggination/Pagginations";
 
-export const Tables = ({userdata}) => {
+export const Tables = ({userdata,deleteUser,userGet,handlePrevious,handleNext,page,pageCount,setPage}) => {
+
+  const handleChangeStatus = async (id, status) => {
+    const response = await statuschangefunc(id, status);
+    if (response.status === 200) {
+      userGet();
+      toast.success("Status Updated")
+    } else {
+      toast.error("error ")
+    }
+    
+  }
   return (
     <>
       <div className="container">
@@ -47,8 +61,8 @@ export const Tables = ({userdata}) => {
                           </Badge>
                         </Dropdown.Toggle>
                         <Dropdown.Menu>
-                          <Dropdown.Item>Active</Dropdown.Item>
-                          <Dropdown.Item>InActive</Dropdown.Item>
+                          <Dropdown.Item onClick={()=>handleChangeStatus(item._id,"Active")}>Active</Dropdown.Item>
+                          <Dropdown.Item onClick={()=>handleChangeStatus(item._id,"InActive")}>InActive</Dropdown.Item>
                         </Dropdown.Menu>
                       </Dropdown>
                     </td>
@@ -90,7 +104,7 @@ export const Tables = ({userdata}) => {
                             </NavLink>
                           </Dropdown.Item>
                           <Dropdown.Item>
-                            <div >
+                            <div onClick={() => deleteUser(item._id)}>
                               <i
                                 class="fa-solid fa-trash"
                                 style={{ color: "red" }}
@@ -108,9 +122,17 @@ export const Tables = ({userdata}) => {
                   
                 </tbody>
               </Table>
+              <Pagginations
+                handlePrevious={handlePrevious}
+                handleNext={handleNext}
+                page={page}
+                pageCount={pageCount}
+                setPage={setPage}
+              />
             </Card>
           </div>
         </Row>
+        <ToastContainer />
       </div>
     </>
   );

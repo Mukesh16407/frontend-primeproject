@@ -22,7 +22,8 @@ export const Edit = () => {
 
   const { id } = useParams();
   const navigate = useNavigate();
-
+  const {setUpdate} = useContext(updateData);
+ 
   const [inputdata, setInputData] = useState({
     fname: "",
     lname: "",
@@ -40,7 +41,7 @@ export const Edit = () => {
 
   const [preview, setPreview] = useState("");
 
-  const {setUpdate} = useContext(updateData);
+ 
  
   const setinputValue =(e)=>{
     
@@ -93,12 +94,11 @@ export const Edit = () => {
       toast.error("Gender is Required !")
     } else if (status === "") {
       toast.error("Status is Required !")
-    } else if (image === "") {
-      toast.error("Prfile is Required !")
     } else if (location === "") {
       toast.error("location is Required !")
     } else {
       const data = new FormData();
+
       data.append("fname",fname)
       data.append("lname",lname)
       data.append("email",email)
@@ -113,7 +113,7 @@ export const Edit = () => {
       }
 
       const response = await editfunc(id,data,config);
-
+      
       if(response.status === 200){
         setUpdate(response.data)
         navigate("/")
@@ -137,7 +137,7 @@ export const Edit = () => {
     }, 1200);
   },[image])
 
-  
+
   // status optios
   const options = [
     { value: 'Active', label: 'Active' },
